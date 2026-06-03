@@ -8,12 +8,22 @@ from pathlib import Path
 TEXTS_DIR = Path("texts")
 DB_PATH = Path("decisions.db")
 
+NEPALI_DIGITS = "०-९"
+
 DECISION_NUMBER_PATTERN = re.compile(
     r"निर्णय नं\.?\s*\n?\s*([०-९]+)", re.MULTILINE
 )
 
+DECISION_NUMBER_INLINE = re.compile(
+    r"निर्णय नं\.\s+([०-९]+)", re.MULTILINE
+)
+
 DATE_PATTERN = re.compile(
     r"फैसला\s*मिति\s*[:ः]?\s*\n?\s*([०-९।।\.\s]+)", re.MULTILINE
+)
+
+Aadesh_DATE_PATTERN = re.compile(
+    r"आदेश\s*मिति\s*[:ः]?\s*\n?\s*([०-९।।\.\s]+)", re.MULTILINE
 )
 
 BENCH_PATTERN = re.compile(
@@ -21,13 +31,17 @@ BENCH_PATTERN = re.compile(
 )
 
 JUDGE_PATTERN = re.compile(
-    r"(?:माननीय\s*)?(?:न्यायाधीश|नयायाधीश)\s*(?:श्री|श्ी)\s*(.+?)(?:\n|$)",
+    r"(?:माननीय\s*)?(?:न्यायाधीश|नयायाधीश)\s*(?:श्री|श्ी|शी)\s*(.+?)(?:\n|$)",
     re.MULTILINE,
 )
 
 MUDDA_PATTERN = re.compile(
-    r"मुद्दा\s*[:ः–\-]?\s*\n?\s*(.+?)(?:\n(?:निवेदक|पुनरावेदक|प्रत्यर्थी|वादी|प्रतिवादी|विपक्ी))",
+    r"मुद्दा\s*[:ः–\-]?\s*\n?\s*(.+?)(?:\n(?:निवेदक|पुनरावेदक|प्रत्यर्थी|वादी|प्रतिवादी|विपक्ी|विपक्षी))",
     re.DOTALL,
+)
+
+CASE_NUMBER_PATTERN = re.compile(
+    r"([०-९]{2,3}-(?:CF|NF|SF|WF|TF|MF)-[०-९]{4})", re.MULTILINE
 )
 
 
@@ -43,6 +57,7 @@ def setup_database(db_path: Path) -> sqlite3.Connection:
             bench TEXT,
             judges TEXT,
             mudda TEXT,
+            case_number TEXT,
             source_file TEXT,
             full_text TEXT,
             char_count INTEGER,
@@ -68,6 +83,9 @@ def extract_decision_number(text: str) -> tuple[str, str]:
 
 def extract_date(text: str) -> str:
     match = DATE_PATTERN.search(text)
+    if match:
+        return match.group(1).strip().rstrip("।").strip()
+    match = Aadesh_DATE_PATTERN.search(text)
     if match:
         return match.group(1).strip().rstrip("।").strip()
     return ""
@@ -99,11 +117,43 @@ def extract_mudda(text: str) -> str:
     return ""
 
 
-def split_on_boundaries(text: str) -> list[tuple[str, int]]:
-    """Split text on decision boundaries, returning (chunk, start_pos) pairs."""
+def extract_case_number(text: str) -> str:
+    match = CASE_NUMBER_PATTERN.search(text)
+    if match:
+        return match.group(1)
+    return ""
+
+
+def find_decision_boundaries_nirnay(text: str) -> list[int]:
+    """Find boundaries for files using 'निर्णय नं' format."""
     boundaries = []
-    for match in re.finditer(r"निर्णय नं\.?\s*\n", text):
+    lines = text.split("\n")
+    for i, line in enumerate(lines):
+        stripped = line.strip()
+        if re.match(r"निर्णय नं\.\s+[०-९]+", stripped):
+            char_pos = sum(len(lines[j]) + 1 for j in range(i))
+            boundaries.append(char_pos)
+    return boundaries
+
+
+def find_decision_boundaries_sarbocch(text: str) -> list[int]:
+    """Find boundaries for files using 'सर्वोच्च अदालत' format."""
+    boundaries = []
+    pattern = re.compile(
+        r"^सर्वोच्च\s+अदालत,\s*(?:पूर्ण|संयुत्तफ)\s+इजलास",
+        re.MULTILINE,
+    )
+    for match in pattern.finditer(text):
         boundaries.append(match.start())
+    return boundaries
+
+
+def split_on_boundaries(text: str, source_file: str) -> list[tuple[str, int]]:
+    """Split text on decision boundaries, returning (chunk, start_pos) pairs."""
+    boundaries = find_decision_boundaries_nirnay(text)
+
+    if not boundaries:
+        boundaries = find_decision_boundaries_sarbocch(text)
 
     if not boundaries:
         return []
@@ -112,7 +162,7 @@ def split_on_boundaries(text: str) -> list[tuple[str, int]]:
     for i, start in enumerate(boundaries):
         end = boundaries[i + 1] if i + 1 < len(boundaries) else len(text)
         chunk = text[start:end].strip()
-        if len(chunk) > 50:
+        if len(chunk) > 100:
             chunks.append((chunk, start))
 
     return chunks
@@ -124,18 +174,24 @@ def parse_file(file_path: Path) -> list[dict]:
     except UnicodeDecodeError:
         text = file_path.read_text(encoding="utf-8", errors="replace")
 
-    chunks = split_on_boundaries(text)
+    chunks = split_on_boundaries(text, file_path.name)
     decisions = []
 
     for chunk_text, _ in chunks:
         number, number_raw = extract_decision_number(chunk_text)
         if not number:
-            continue
+            case_num = extract_case_number(chunk_text)
+            if case_num:
+                number = case_num
+                number_raw = case_num
+            else:
+                continue
 
         date = extract_date(chunk_text)
         bench = extract_bench(chunk_text)
         judges = extract_judges(chunk_text)
         mudda = extract_mudda(chunk_text)
+        case_number = extract_case_number(chunk_text)
 
         decisions.append({
             "decision_number": number,
@@ -144,6 +200,7 @@ def parse_file(file_path: Path) -> list[dict]:
             "bench": bench,
             "judges": judges,
             "mudda": mudda,
+            "case_number": case_number,
             "source_file": file_path.name,
             "full_text": chunk_text,
             "char_count": len(chunk_text),
@@ -159,8 +216,8 @@ def insert_decisions(conn: sqlite3.Connection, decisions: list[dict]) -> int:
             conn.execute("""
                 INSERT OR IGNORE INTO decisions
                 (decision_number, decision_number_raw, decision_date, bench,
-                 judges, mudda, source_file, full_text, char_count)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                 judges, mudda, case_number, source_file, full_text, char_count)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 d["decision_number"],
                 d["decision_number_raw"],
@@ -168,6 +225,7 @@ def insert_decisions(conn: sqlite3.Connection, decisions: list[dict]) -> int:
                 d["bench"],
                 d["judges"],
                 d["mudda"],
+                d["case_number"],
                 d["source_file"],
                 d["full_text"],
                 d["char_count"],
