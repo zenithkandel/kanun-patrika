@@ -7,7 +7,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:wght@300;400;500;600;700&family=Noto+Serif+Devanagari:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; border-radius: 0 !important; }
 
         :root {
             --bg: #f5f0e8;
@@ -53,9 +53,11 @@
         .container {
             position: relative;
             z-index: 1;
+            width: 100%;
             max-width: 780px;
             margin: 0 auto;
             padding: 0 32px;
+            text-align: center;
         }
 
         /* ===== INITIAL STATE (centered) ===== */
@@ -65,6 +67,7 @@
             align-items: center;
             justify-content: center;
             min-height: 100vh;
+            width: 100%;
             transition: var(--transition-slow);
         }
 
@@ -77,7 +80,7 @@
         /* Header */
         header {
             text-align: center;
-            margin-bottom: 48px;
+            margin-bottom: 40px;
             transition: var(--transition-slow);
         }
 
@@ -126,10 +129,6 @@
             transition: var(--transition-slow);
         }
 
-        .page-center:not(.has-results) .search-section {
-            max-width: 680px;
-        }
-
         .page-center.has-results .search-section {
             position: fixed;
             bottom: 0;
@@ -148,6 +147,7 @@
             border: 1px solid var(--border);
             box-shadow: var(--shadow-md);
             transition: var(--transition);
+            border-radius: 0;
         }
 
         .page-center:not(.has-results) .search-box {
@@ -199,6 +199,7 @@
             height: 52px;
             margin: 2px;
             border: none;
+            border-radius: 0;
             background: var(--accent);
             color: #faf7f2;
             cursor: pointer;
@@ -230,13 +231,14 @@
 
         .hint-row {
             display: flex;
-            gap: 8px;
-            padding: 12px 16px;
+            justify-content: center;
+            gap: 10px;
+            padding: 14px 16px;
             flex-wrap: wrap;
         }
 
         .hint-chip {
-            padding: 5px 12px;
+            padding: 6px 16px;
             border: 1px solid var(--border);
             background: var(--bg);
             color: var(--text-dim);
@@ -244,6 +246,7 @@
             font-family: inherit;
             cursor: pointer;
             transition: var(--transition);
+            border-radius: 0;
         }
 
         .hint-chip:hover {
@@ -268,6 +271,7 @@
             border-top-color: var(--accent);
             animation: spin 0.9s linear infinite;
             margin: 0 auto 24px;
+            border-radius: 0;
         }
 
         @keyframes spin { to { transform: rotate(360deg); } }
@@ -307,6 +311,7 @@
             font-size: 11px;
             font-weight: 600;
             transition: var(--transition);
+            border-radius: 0;
         }
 
         .loading-step.active .step-num {
@@ -353,6 +358,7 @@
             border: 1px solid var(--border);
             padding: 24px;
             margin-bottom: 28px;
+            border-radius: 0;
         }
 
         .explanation-label {
@@ -407,6 +413,7 @@
             background: var(--bg);
             font-size: 12px;
             color: var(--text-dim);
+            border-radius: 0;
         }
 
         .results-grid {
@@ -415,12 +422,14 @@
             gap: 1px;
             background: var(--border);
             border: 1px solid var(--border);
+            border-radius: 0;
         }
 
         .decision-card {
             background: var(--surface);
             padding: 24px;
             transition: var(--transition);
+            border-radius: 0;
         }
 
         .decision-card:hover {
@@ -453,6 +462,7 @@
             padding: 2px 8px;
             border: 1px solid var(--border);
             background: var(--bg);
+            border-radius: 0;
         }
 
         .card-mudda {
@@ -512,6 +522,7 @@
             color: #8b3a2a;
             font-size: 14px;
             display: none;
+            border-radius: 0;
         }
 
         .error-card.active { display: block; }
@@ -523,6 +534,7 @@
             color: var(--text-muted);
             font-size: 12px;
             letter-spacing: 0.5px;
+            width: 100%;
         }
 
         /* ===== RESPONSIVE ===== */
