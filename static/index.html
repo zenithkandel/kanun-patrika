@@ -1,0 +1,781 @@
+<!DOCTYPE html>
+<html lang="ne">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>कानून पत्रिका — नेपाल सर्वोच्च अदालत नजिर खोज</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+Devanagari:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        :root {
+            --bg: #0a0a0f;
+            --surface: #12121a;
+            --surface-2: #1a1a25;
+            --surface-3: #22222f;
+            --border: #2a2a3a;
+            --border-light: #353548;
+            --text: #e8e8f0;
+            --text-dim: #8888a0;
+            --text-muted: #555568;
+            --accent: #6366f1;
+            --accent-dim: #4f46e5;
+            --accent-glow: rgba(99, 102, 241, 0.15);
+            --accent-glow-strong: rgba(99, 102, 241, 0.3);
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --radius: 12px;
+            --radius-lg: 16px;
+            --radius-xl: 24px;
+            --shadow: 0 4px 24px rgba(0,0,0,0.4);
+            --shadow-lg: 0 8px 40px rgba(0,0,0,0.5);
+            --transition: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        body {
+            font-family: 'Inter', 'Noto Sans Devanagari', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        .bg-gradient {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background:
+                radial-gradient(ellipse 80% 60% at 50% -20%, rgba(99,102,241,0.08), transparent),
+                radial-gradient(ellipse 60% 40% at 80% 50%, rgba(99,102,241,0.04), transparent);
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 24px;
+        }
+
+        /* Header */
+        header {
+            padding: 48px 0 0;
+            text-align: center;
+        }
+
+        .logo-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 18px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            border-radius: 100px;
+            font-size: 13px;
+            color: var(--text-dim);
+            margin-bottom: 28px;
+            letter-spacing: 0.5px;
+        }
+
+        .logo-badge .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: var(--success);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.4; }
+        }
+
+        h1 {
+            font-size: 42px;
+            font-weight: 700;
+            letter-spacing: -1px;
+            margin-bottom: 12px;
+            background: linear-gradient(135deg, #e8e8f0, #a0a0c0);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .subtitle {
+            font-size: 17px;
+            color: var(--text-dim);
+            font-weight: 400;
+            line-height: 1.6;
+            max-width: 520px;
+            margin: 0 auto;
+        }
+
+        /* Search Section */
+        .search-section {
+            margin-top: 48px;
+            position: relative;
+        }
+
+        .search-wrapper {
+            position: relative;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-xl);
+            padding: 6px;
+            transition: var(--transition);
+            box-shadow: var(--shadow);
+        }
+
+        .search-wrapper:focus-within {
+            border-color: var(--accent);
+            box-shadow: var(--shadow-lg), 0 0 0 1px var(--accent), 0 0 60px var(--accent-glow);
+        }
+
+        .search-inner {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+        }
+
+        .search-icon {
+            flex-shrink: 0;
+            width: 22px;
+            height: 22px;
+            color: var(--text-muted);
+            transition: var(--transition);
+        }
+
+        .search-wrapper:focus-within .search-icon {
+            color: var(--accent);
+        }
+
+        #searchInput {
+            flex: 1;
+            background: none;
+            border: none;
+            outline: none;
+            font-size: 16px;
+            font-family: inherit;
+            color: var(--text);
+            resize: none;
+            min-height: 28px;
+            max-height: 150px;
+            line-height: 1.5;
+        }
+
+        #searchInput::placeholder {
+            color: var(--text-muted);
+        }
+
+        .search-btn {
+            flex-shrink: 0;
+            width: 42px;
+            height: 42px;
+            border-radius: 12px;
+            border: none;
+            background: var(--accent);
+            color: white;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: var(--transition);
+        }
+
+        .search-btn:hover {
+            background: var(--accent-dim);
+            transform: scale(1.05);
+        }
+
+        .search-btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .search-btn svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .search-hints {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .hint-chip {
+            padding: 6px 14px;
+            border-radius: 100px;
+            background: var(--surface-2);
+            border: 1px solid var(--border);
+            color: var(--text-dim);
+            font-size: 13px;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+
+        .hint-chip:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: var(--accent-glow);
+        }
+
+        /* Loading */
+        .loading-section {
+            display: none;
+            text-align: center;
+            padding: 60px 0;
+        }
+
+        .loading-section.active { display: block; }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .loading-text {
+            color: var(--text-dim);
+            font-size: 15px;
+        }
+
+        .loading-steps {
+            margin-top: 24px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .loading-step {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-muted);
+            font-size: 14px;
+            transition: var(--transition);
+        }
+
+        .loading-step.active {
+            color: var(--accent);
+        }
+
+        .loading-step.done {
+            color: var(--success);
+        }
+
+        .step-check {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            transition: var(--transition);
+        }
+
+        .loading-step.active .step-check {
+            border-color: var(--accent);
+            animation: pulse 1s ease-in-out infinite;
+        }
+
+        .loading-step.done .step-check {
+            border-color: var(--success);
+            background: var(--success);
+            color: white;
+        }
+
+        /* Results */
+        .results-section {
+            display: none;
+            padding: 40px 0 80px;
+        }
+
+        .results-section.active { display: block; }
+
+        .results-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 24px;
+        }
+
+        .results-title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .results-count {
+            color: var(--text-dim);
+            font-size: 14px;
+        }
+
+        .explanation-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 28px;
+        }
+
+        .explanation-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--accent);
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .explanation-text {
+            font-size: 15px;
+            line-height: 1.7;
+            color: var(--text-dim);
+        }
+
+        .key-points {
+            margin-top: 16px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .key-point {
+            display: flex;
+            gap: 10px;
+            font-size: 14px;
+            color: var(--text-dim);
+            line-height: 1.5;
+        }
+
+        .key-point::before {
+            content: "→";
+            color: var(--accent);
+            flex-shrink: 0;
+        }
+
+        .search-keywords {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-top: 16px;
+        }
+
+        .keyword-tag {
+            padding: 4px 10px;
+            border-radius: 6px;
+            background: var(--surface-3);
+            border: 1px solid var(--border);
+            font-size: 12px;
+            color: var(--text-dim);
+        }
+
+        .results-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .decision-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            transition: var(--transition);
+            cursor: default;
+        }
+
+        .decision-card:hover {
+            border-color: var(--border-light);
+            transform: translateY(-1px);
+            box-shadow: var(--shadow);
+        }
+
+        .card-top {
+            display: flex;
+            align-items: flex-start;
+            justify-content: space-between;
+            gap: 16px;
+            margin-bottom: 14px;
+        }
+
+        .decision-number {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--accent);
+            font-variant-numeric: tabular-nums;
+        }
+
+        .decision-meta {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            flex-shrink: 0;
+        }
+
+        .meta-tag {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            color: var(--text-muted);
+            padding: 4px 10px;
+            background: var(--surface-2);
+            border-radius: 6px;
+        }
+
+        .meta-tag svg {
+            width: 12px;
+            height: 12px;
+            opacity: 0.6;
+        }
+
+        .card-mudda {
+            font-size: 14px;
+            line-height: 1.6;
+            color: var(--text-dim);
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .card-judges {
+            margin-top: 12px;
+            font-size: 13px;
+            color: var(--text-muted);
+        }
+
+        .card-judges strong {
+            color: var(--text-dim);
+            font-weight: 500;
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 80px 0;
+            display: none;
+        }
+
+        .empty-state.active { display: block; }
+
+        .empty-icon {
+            width: 64px;
+            height: 64px;
+            margin: 0 auto 20px;
+            color: var(--text-muted);
+            opacity: 0.4;
+        }
+
+        .empty-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .empty-text {
+            color: var(--text-dim);
+            font-size: 14px;
+            line-height: 1.6;
+        }
+
+        /* Error */
+        .error-card {
+            background: rgba(239, 68, 68, 0.08);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: var(--radius-lg);
+            padding: 20px 24px;
+            margin-bottom: 24px;
+            color: #fca5a5;
+            font-size: 14px;
+            display: none;
+        }
+
+        .error-card.active { display: block; }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 40px 0;
+            color: var(--text-muted);
+            font-size: 13px;
+            border-top: 1px solid var(--border);
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            h1 { font-size: 28px; }
+            .subtitle { font-size: 15px; }
+            header { padding: 32px 0 0; }
+            .search-section { margin-top: 32px; }
+            .card-top { flex-direction: column; gap: 8px; }
+            .decision-number { font-size: 18px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-gradient"></div>
+
+    <div class="container">
+        <header>
+            <div class="logo-badge">
+                <span class="dot"></span>
+                नेपाल सर्वोच्च अदालत नजिर खोज प्रणाली
+            </div>
+            <h1>कानून पत्रिका</h1>
+            <p class="subtitle">
+                आफ्नो कानूनी समस्या वर्णन गर्नुहोस् — हामी सर्वोच्च अदालतका सबैभन्दा सम्बन्धित निर्णयहरू खोजिदेछौं
+            </p>
+        </header>
+
+        <section class="search-section">
+            <div class="search-wrapper" id="searchWrapper">
+                <div class="search-inner">
+                    <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                    </svg>
+                    <textarea
+                        id="searchInput"
+                        placeholder="तपाईंको कानूनी समस्या यहाँ लेख्नुहोस्... जस्तै: बुबाको मृत्यु पछि दुई श्रीमतीका सन्तानबीच सम्पत्ति विवाद"
+                        rows="1"
+                    ></textarea>
+                    <button class="search-btn" id="searchBtn" onclick="performSearch()">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                            <path d="M5 12h14M12 5l7 7-7 7"/>
+                        </svg>
+                    </button>
+                </div>
+            </div>
+
+            <div class="search-hints">
+                <span class="hint-chip" onclick="useHint(this)">सम्पत्ति विवाद</span>
+                <span class="hint-chip" onclick="useHint(this)">उत्तराधिकार</span>
+                <span class="hint-chip" onclick="useHint(this)">वैवाहिक विवाद</span>
+                <span class="hint-chip" onclick="useHint(this)">आपराधिक मुद्दा</span>
+                <span class="hint-chip" onclick="useHint(this)">रिट निवेदन</span>
+            </div>
+        </section>
+
+        <div class="error-card" id="errorCard"></div>
+
+        <section class="loading-section" id="loadingSection">
+            <div class="spinner"></div>
+            <div class="loading-text">तपाईंको खोजी प्रशोधन गर्दै...</div>
+            <div class="loading-steps">
+                <div class="loading-step" id="step1">
+                    <div class="step-check">1</div>
+                    <span>कानूनी शब्दहरू पहिचान गर्दै</span>
+                </div>
+                <div class="loading-step" id="step2">
+                    <div class="step-check">2</div>
+                    <span>निर्णयहरू खोज्दै</span>
+                </div>
+                <div class="loading-step" id="step3">
+                    <div class="step-check">3</div>
+                    <span>नतिजा व्याख्या गर्दै</span>
+                </div>
+            </div>
+        </section>
+
+        <section class="results-section" id="resultsSection">
+            <div class="results-header">
+                <div class="results-title" id="resultsTitle"></div>
+                <div class="results-count" id="resultsCount"></div>
+            </div>
+
+            <div class="explanation-card" id="explanationCard">
+                <div class="explanation-label">विश्लेषण</div>
+                <div class="explanation-text" id="explanationText"></div>
+                <div class="key-points" id="keyPoints"></div>
+                <div class="search-keywords" id="searchKeywords"></div>
+            </div>
+
+            <div class="results-grid" id="resultsGrid"></div>
+        </section>
+
+        <div class="empty-state" id="emptyState">
+            <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+                <path d="M8 11h6"/>
+            </svg>
+            <div class="empty-title">कुनै नतिजा भेटिएन</div>
+            <div class="empty-text">कृपया फरक शब्दहरू प्रयोग गरेर फेरि खोज्नुहोस्</div>
+        </div>
+
+        <footer>
+            कानून पत्रिका — नेपाल सर्वोच्च अदालत नजिर खोज प्रणाली
+        </footer>
+    </div>
+
+    <script>
+        const searchInput = document.getElementById('searchInput');
+        const searchBtn = document.getElementById('searchBtn');
+        const loadingSection = document.getElementById('loadingSection');
+        const resultsSection = document.getElementById('resultsSection');
+        const emptyState = document.getElementById('emptyState');
+        const errorCard = document.getElementById('errorCard');
+
+        // Auto-resize textarea
+        searchInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 150) + 'px';
+        });
+
+        // Enter to search
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                performSearch();
+            }
+        });
+
+        function useHint(el) {
+            searchInput.value = el.textContent;
+            searchInput.focus();
+            searchInput.dispatchEvent(new Event('input'));
+        }
+
+        function setActiveStep(stepNum) {
+            document.querySelectorAll('.loading-step').forEach((el, i) => {
+                el.classList.remove('active', 'done');
+                if (i + 1 < stepNum) el.classList.add('done');
+                if (i + 1 === stepNum) el.classList.add('active');
+            });
+        }
+
+        async function performSearch() {
+            const query = searchInput.value.trim();
+            if (!query) return;
+
+            errorCard.classList.remove('active');
+            resultsSection.classList.remove('active');
+            emptyState.classList.remove('active');
+            loadingSection.classList.add('active');
+            searchBtn.disabled = true;
+
+            setActiveStep(1);
+
+            try {
+                const res = await fetch('/api/search', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ query })
+                });
+
+                setActiveStep(2);
+
+                if (!res.ok) {
+                    const err = await res.json();
+                    throw new Error(err.detail || 'खोजी गर्दा समस्या भयो');
+                }
+
+                const data = await res.json();
+                setActiveStep(3);
+
+                await new Promise(r => setTimeout(r, 400));
+
+                loadingSection.classList.remove('active');
+
+                if (data.results.length === 0) {
+                    emptyState.classList.add('active');
+                    return;
+                }
+
+                renderResults(data);
+                resultsSection.classList.add('active');
+
+            } catch (err) {
+                loadingSection.classList.remove('active');
+                errorCard.textContent = err.message;
+                errorCard.classList.add('active');
+            } finally {
+                searchBtn.disabled = false;
+            }
+        }
+
+        function renderResults(data) {
+            document.getElementById('resultsTitle').textContent = 'सम्बन्धित निर्णयहरू';
+            document.getElementById('resultsCount').textContent = `${data.total_found} वटा निर्णय भेटियो`;
+
+            const expCard = document.getElementById('explanationCard');
+            const expText = document.getElementById('explanationText');
+            const keyPoints = document.getElementById('keyPoints');
+            const keywords = document.getElementById('searchKeywords');
+
+            if (data.explanation) {
+                expCard.style.display = 'block';
+                expText.textContent = data.explanation.explanation || '';
+
+                keyPoints.innerHTML = '';
+                if (data.explanation.key_points) {
+                    data.explanation.key_points.forEach(point => {
+                        const div = document.createElement('div');
+                        div.className = 'key-point';
+                        div.textContent = point;
+                        keyPoints.appendChild(div);
+                    });
+                }
+
+                keywords.innerHTML = '';
+                if (data.optimized_query && data.optimized_query.search_keywords) {
+                    data.optimized_query.search_keywords.forEach(kw => {
+                        const span = document.createElement('span');
+                        span.className = 'keyword-tag';
+                        span.textContent = kw;
+                        keywords.appendChild(span);
+                    });
+                }
+            } else {
+                expCard.style.display = 'none';
+            }
+
+            const grid = document.getElementById('resultsGrid');
+            grid.innerHTML = '';
+
+            data.results.forEach((r, i) => {
+                const card = document.createElement('div');
+                card.className = 'decision-card';
+                card.innerHTML = `
+                    <div class="card-top">
+                        <div class="decision-number">नि.नं. ${r.decision_number}</div>
+                        <div class="decision-meta">
+                            ${r.decision_date ? `
+                            <span class="meta-tag">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>
+                                </svg>
+                                ${r.decision_date}
+                            </span>` : ''}
+                            ${r.bench ? `
+                            <span class="meta-tag">
+                                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M3 21h18M3 7v1a3 3 0 006 0V7m0 1a3 3 0 006 0V7m0 1a3 3 0 006 0V7H3l2-4h14l2 4"/>
+                                </svg>
+                                ${r.bench.includes('पूर्ण') ? 'पूर्ण इजलास' : 'संयुत्तफ इजलास'}
+                            </span>` : ''}
+                        </div>
+                    </div>
+                    ${r.mudda ? `<div class="card-mudda">${r.mudda}</div>` : ''}
+                    ${r.judges ? `<div class="card-judges"><strong>न्यायाधीश:</strong> ${r.judges}</div>` : ''}
+                `;
+                grid.appendChild(card);
+            });
+        }
+    </script>
+</body>
+</html>
