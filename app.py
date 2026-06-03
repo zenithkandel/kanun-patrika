@@ -1,35 +1,64 @@
 #!/usr/bin/env python3
 """
 Kanun Patrika - Nepal Supreme Court Nājir Semantic Search
-FastAPI backend with Gemini integration.
+FastAPI backend with Gemini API via direct HTTP (no heavy ML deps).
 """
 
 import os
+import sys
 import sqlite3
 import json
 from pathlib import Path
 from contextlib import contextmanager
+from urllib.request import Request, urlopen
+from urllib.error import URLError
 
 from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse, FileResponse
 from pydantic import BaseModel
-from dotenv import load_dotenv
 
-import google.generativeai as genai
+if getattr(sys, 'frozen', False):
+    BASE_DIR = Path(sys._MEIPASS)
+    WORK_DIR = Path(os.getcwd())
+else:
+    BASE_DIR = Path(__file__).parent
+    WORK_DIR = BASE_DIR
 
-load_dotenv()
+try:
+    from dotenv import load_dotenv as _load_dotenv
+    _load_dotenv(BASE_DIR / ".env")
+except ImportError:
+    pass
 
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-DB_PATH = Path("decisions.db")
+DB_PATH = WORK_DIR / "decisions.db"
 
 if not GEMINI_API_KEY:
     print("WARNING: GEMINI_API_KEY not set. Create .env file with your API key.")
 
-genai.configure(api_key=GEMINI_API_KEY)
-gemini_model = genai.GenerativeModel("gemini-2.5-flash")
-
 app = FastAPI(title="Kanun Patrika", description="Nepal Supreme Court Nājir Search")
+
+
+GEMINI_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
+
+
+def call_gemini(prompt: str) -> str | None:
+    """Call Gemini API via stdlib urllib (no external HTTP deps needed)."""
+    if not GEMINI_API_KEY:
+        return None
+    url = f"{GEMINI_URL}?key={GEMINI_API_KEY}"
+    payload = json.dumps({
+        "contents": [{"parts": [{"text": prompt}]}]
+    }).encode("utf-8")
+    req = Request(url, data=payload, headers={"Content-Type": "application/json"})
+    try:
+        with urlopen(req, timeout=30) as resp:
+            data = json.loads(resp.read().decode("utf-8"))
+            return data["candidates"][0]["content"]["parts"][0]["text"]
+    except Exception as e:
+        print(f"Gemini API error: {e}")
+        return None
 
 
 @contextmanager
@@ -162,18 +191,25 @@ def optimize_query_with_gemini(user_query: str) -> dict:
             "case_context": user_query,
         }
 
-    try:
-        prompt = QUERY_OPTIMIZATION_PROMPT.format(user_query=user_query)
-        response = gemini_model.generate_content(prompt)
-        text = response.text.strip()
+    prompt = QUERY_OPTIMIZATION_PROMPT.format(user_query=user_query)
+    text = call_gemini(prompt)
 
+    if not text:
+        words = user_query.split()
+        return {
+            "search_keywords": words[:5],
+            "legal_concepts": [],
+            "case_context": user_query,
+        }
+
+    try:
+        text = text.strip()
         if text.startswith("```"):
             text = text.split("\n", 1)[1]
             text = text.rsplit("```", 1)[0]
-
         return json.loads(text)
     except Exception as e:
-        print(f"Gemini optimization error: {e}")
+        print(f"Gemini optimization parse error: {e}")
         words = user_query.split()
         return {
             "search_keywords": words[:5],
@@ -184,12 +220,13 @@ def optimize_query_with_gemini(user_query: str) -> dict:
 
 def explain_results_with_gemini(user_query: str, results: list[dict]) -> dict:
     """Use Gemini to explain search results to the user."""
-    if not GEMINI_API_KEY or not results:
-        if not results:
-            return {
-                "explanation": "तपाईंको खोजी अनुसार कुनै निर्णय भेटिएन। कृपया फरक शब्दहरू प्रयोग गरेर फेरि खोज्नुहोस्।",
-                "key_points": [],
-            }
+    if not results:
+        return {
+            "explanation": "तपाईंको खोजी अनुसार कुनै निर्णय भेटिएन। कृपया फरक शब्दहरू प्रयोग गरेर फेरि खोज्नुहोस्।",
+            "key_points": [],
+        }
+
+    if not GEMINI_API_KEY:
         return {
             "explanation": "यी निर्णयहरू तपाईंको खोजीसँग सम्बन्धित छन्।",
             "key_points": [r.get("mudda", "")[:100] for r in results[:3]],
@@ -205,20 +242,25 @@ Decision {i}:
 - मुद्दा: {r['mudda'][:200] if r['mudda'] else 'उपलब्ध छैन'}
 """
 
-    try:
-        prompt = EXPLANATION_PROMPT.format(
-            user_query=user_query, results_text=results_text
-        )
-        response = gemini_model.generate_content(prompt)
-        text = response.text.strip()
+    prompt = EXPLANATION_PROMPT.format(
+        user_query=user_query, results_text=results_text
+    )
+    text = call_gemini(prompt)
 
+    if not text:
+        return {
+            "explanation": f"तपाईंको खोजीसँग {len(results)} वटा निर्णयहरू भेटिए।",
+            "key_points": [r.get("mudda", "")[:100] for r in results[:3]],
+        }
+
+    try:
+        text = text.strip()
         if text.startswith("```"):
             text = text.split("\n", 1)[1]
             text = text.rsplit("```", 1)[0]
-
         return json.loads(text)
     except Exception as e:
-        print(f"Gemini explanation error: {e}")
+        print(f"Gemini explanation parse error: {e}")
         return {
             "explanation": f"तपाईंको खोजीसँग {len(results)} वटा निर्णयहरू भेटिए।",
             "key_points": [r.get("mudda", "")[:100] for r in results[:3]],
@@ -227,7 +269,8 @@ Decision {i}:
 
 @app.get("/", response_class=HTMLResponse)
 async def root():
-    return FileResponse("static/index.html")
+    index_path = BASE_DIR / "static" / "index.html"
+    return FileResponse(str(index_path))
 
 
 @app.post("/api/search")
@@ -287,7 +330,7 @@ async def stats():
     }
 
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+app.mount("/static", StaticFiles(directory=str(BASE_DIR / "static")), name="static")
 
 
 if __name__ == "__main__":
