@@ -8,7 +8,6 @@ import os
 import sys
 import tempfile
 import shutil
-import sqlite3
 from pathlib import Path
 
 
@@ -18,8 +17,23 @@ def get_base_path():
     return Path(__file__).parent
 
 
+def get_exe_dir():
+    if getattr(sys, 'frozen', False):
+        return Path(sys.executable).parent
+    return Path(__file__).parent
+
+
 def main():
     base = get_base_path()
+    exe_dir = get_exe_dir()
+
+    # Fix Windows console encoding for Nepali text
+    if sys.platform == "win32":
+        try:
+            sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+            sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+        except Exception:
+            pass
 
     # When frozen, extract assets to a temp directory
     if getattr(sys, 'frozen', False):
@@ -40,16 +54,17 @@ def main():
     os.environ.setdefault("HOST", "0.0.0.0")
     os.environ.setdefault("PORT", "8000")
 
-    # Load .env if present (dev mode)
-    env_file = base / ".env"
-    if env_file.exists():
-        for line in env_file.read_text().splitlines():
-            line = line.strip()
-            if line and not line.startswith("#") and "=" in line:
-                key, val = line.split("=", 1)
-                key, val = key.strip(), val.strip()
-                if key not in os.environ:
-                    os.environ[key] = val
+    # Load .env: first check next to the exe, then in base
+    for env_candidate in [exe_dir / ".env", base / ".env"]:
+        if env_candidate.exists():
+            for line in env_candidate.read_text(encoding="utf-8").splitlines():
+                line = line.strip()
+                if line and not line.startswith("#") and "=" in line:
+                    key, val = line.split("=", 1)
+                    key, val = key.strip(), val.strip()
+                    if key not in os.environ:
+                        os.environ[key] = val
+            break
 
     # Import and run the app
     from app import app
@@ -58,7 +73,7 @@ def main():
     host = os.getenv("HOST", "0.0.0.0")
     port = int(os.getenv("PORT", "8000"))
 
-    print(f"\n  कानून पत्रिका — Nepal Supreme Court Nājir Search")
+    print(f"\n  Kanun Patrika - Nepal Supreme Court Najir Search")
     print(f"  Starting on http://{host}:{port}")
     print(f"  Press Ctrl+C to stop\n")
 
