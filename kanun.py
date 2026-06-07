@@ -23,6 +23,17 @@ def get_exe_dir():
     return Path(__file__).parent
 
 
+def load_env_file(path: Path):
+    """Load .env file, ALWAYS overriding existing env vars."""
+    if not path.exists():
+        return
+    for line in path.read_text(encoding="utf-8").splitlines():
+        line = line.strip()
+        if line and not line.startswith("#") and "=" in line:
+            key, val = line.split("=", 1)
+            os.environ[key.strip()] = val.strip()
+
+
 def main():
     base = get_base_path()
     exe_dir = get_exe_dir()
@@ -34,6 +45,10 @@ def main():
             sys.stderr.reconfigure(encoding="utf-8", errors="replace")
         except Exception:
             pass
+
+    # Load .env FIRST — next to the exe, then bundled fallback
+    load_env_file(exe_dir / ".env")
+    load_env_file(base / ".env")
 
     # When frozen, extract assets to a temp directory
     if getattr(sys, 'frozen', False):
@@ -49,22 +64,6 @@ def main():
         os.chdir(str(work_dir))
     else:
         os.chdir(str(base))
-
-    # Set environment
-    os.environ.setdefault("HOST", "0.0.0.0")
-    os.environ.setdefault("PORT", "8000")
-
-    # Load .env: first check next to the exe, then in base
-    for env_candidate in [exe_dir / ".env", base / ".env"]:
-        if env_candidate.exists():
-            for line in env_candidate.read_text(encoding="utf-8").splitlines():
-                line = line.strip()
-                if line and not line.startswith("#") and "=" in line:
-                    key, val = line.split("=", 1)
-                    key, val = key.strip(), val.strip()
-                    if key not in os.environ:
-                        os.environ[key] = val
-            break
 
     # Import and run the app
     from app import app
